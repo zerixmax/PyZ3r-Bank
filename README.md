@@ -80,5 +80,10 @@ Standardne biblioteke: os, datetime
 Projekt kreiran u svrhu edukacije i vježbe na tečaju Python Developer Algebra
 Praktična vježba proceduralnog programiranja za buduće aplikacije s kompleksnijim poslovnim logikama.
 
-By [Vaš Nadimak / Ime]
+By 
+
+# ░█▀█░█░█░▀▀█░▀▀█░█▀▄  
+# ░█▀▀░░█░░▄▀░░░▀▄░█▀▄  
+# ░▀░░░░▀░░▀▀▀░▀▀░░▀░▀
+
 Algebra, 2025.
