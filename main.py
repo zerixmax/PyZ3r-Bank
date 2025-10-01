@@ -236,7 +236,8 @@ def select_account():
         
         try:
             choice = input("\nUnesite redni broj računa: ").strip()
-            if not choice: continue
+            if not choice:
+                continue
             choice_id = int(choice)
             
             for account in bank_accounts:
