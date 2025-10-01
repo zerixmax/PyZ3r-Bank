@@ -42,7 +42,7 @@ MIN_DEPOSIT = 500.00
 
 transaction = []
 
-bank_account = None
+bank_accounts = []
 #endregion
 
 #region Functions
@@ -59,7 +59,7 @@ def press_enter():
 #region New Account
 def create_account():
     """Kreiraj novi bankovni račun."""
-    global bank_account
+    global bank_accounts
     clear_screen()
     print("Kreiranje novog bankovnog računa")
     print("------------------------------\n")
@@ -80,8 +80,8 @@ def create_account():
             break
         
     today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    bank_account = {
-        'id': 1,
+    new_account = {
+        'id': len(bank_accounts) + 1,
         'company': company['name'],
         'iban': iban,
         'bank': bank,
@@ -89,15 +89,16 @@ def create_account():
         'currency': currency['code'],
         'created_at': today,
         'transactions': [],
-        'owner': company # Dodajemo informacije o vlasniku
+        'owner': company
     }
     # Dodaj početni depozit kao transakciju
-    add_transaction('deposit', deposit, today, "Početni depozit")
+    add_transaction(new_account, 'deposit', deposit, today, "Početni depozit")
+    bank_accounts.append(new_account)
     print("\nNovi bankovni račun uspješno je kreiran.")
     press_enter()
 #endregion
 #region Transactions
-def add_transaction(t_type, amount, t_date, description=""):
+def add_transaction(account, t_type, amount, t_date, description=""):
     """Dodaj transakciju u bankovni račun."""
     txn = {
         'type': t_type,
@@ -105,11 +106,11 @@ def add_transaction(t_type, amount, t_date, description=""):
         'date': t_date,
         'description': description
     }
-    bank_account['transactions'].append(txn)
+    account['transactions'].append(txn)
 #endregion
 
 #region Show Account Details
-def show_account_details():
+def show_account_details(bank_account):
     """Prikaži detalje bankovnog računa."""
     clear_screen()
     print("Detalji bankovnog računa")
@@ -126,13 +127,13 @@ def show_account_details():
 
 #endregion
 #region Acount transactions
-def show_transactions():
+def show_transactions(bank_account):
     """prikaži transakcije bankovnog računa."""    
     clear_screen()
     print("Transakcije bankovnog računa")
     print("---------------------------\n")
     if bank_account and bank_account['transactions']:
-        for idx, txn in enumerate(bank_account['transactions'], 1):
+        for idx, txn in enumerate(bank_account['transactions'], 1): # type: ignore
             znak = "+" if txn['type'] == "deposit" else "-"
             opis = txn['description'] if txn.get('description') else ""
             print(f"{idx}. {txn['date']} | {txn['type'].upper()} | {znak}{txn['amount']:.2f} {bank_account['currency']} | {opis}")
@@ -141,15 +142,11 @@ def show_transactions():
     press_enter()
 #endregion
 #region Deposit
-def deposit():
+def deposit(bank_account):
     """Uplata na bankovni račun."""
     clear_screen()
     print("Uplata na bankovni račun")
     print("-----------------------\n")
-    if not bank_account:
-        print("Nema kreiranog bankovnog računa.")
-        press_enter()
-        return
     
     while True:
         try:
@@ -170,21 +167,17 @@ def deposit():
     description = input("Unesite opis uplate: ").strip()
     today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     bank_account['balance'] += amount
-    add_transaction('deposit', amount, today, description)  
+    add_transaction(bank_account, 'deposit', amount, today, description)  
     print(f"\nUplata od {amount:.2f} {currency['code']} uspješno izvršena.")
     print(f"Novo stanje računa: {bank_account['balance']:.2f} {bank_account['currency']}")
     press_enter()
 #endregion
 #region Withdraw
-def withdraw():
+def withdraw(bank_account):
     """Isplata s bankovnog računa."""
     clear_screen()
     print("Isplata s bankovnog računa")
     print("-------------------------\n")
-    if not bank_account:
-        print("Nema kreiranog bankovnog računa.")
-        press_enter()
-        return
     try:
         amount = float(input("Unesite iznos isplate: ").strip())
     except ValueError:
@@ -202,14 +195,14 @@ def withdraw():
     description = input("Unesite opis isplate: ").strip()
     today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     bank_account['balance'] -= amount
-    add_transaction('withdraw', amount, today, description)
+    add_transaction(bank_account, 'withdraw', amount, today, description)
     print(f"\nIsplata od {amount:.2f} {currency['code']} uspješno izvršena.")
     print(f"Novo stanje računa: {bank_account['balance']:.2f} {bank_account['currency']}")
     press_enter()
 #endregion
 #region owner info
 """Prikaži informacije o vlasniku računa."""
-def show_owner_info():
+def show_owner_info(bank_account):
     clear_screen()
     print("Informacije o vlasniku računa")
     print("------------------------------\n")
@@ -222,6 +215,39 @@ def show_owner_info():
     else:
         print("Nema kreiranog bankovnog računa.")
     press_enter()
+#endregion
+#region Account Selection
+def select_account():
+    """Omogućuje korisniku odabir računa za rad."""
+    if not bank_accounts:
+        print("Nema kreiranih bankovnih računa. Molimo prvo kreirajte račun.")
+        press_enter()
+        return None
+
+    if len(bank_accounts) == 1:
+        return bank_accounts[0]
+
+    while True:
+        clear_screen()
+        print("Odaberite račun")
+        print("----------------\n")
+        for account in bank_accounts:
+            print(f"{account['id']}. {account['iban']} ({account['balance']:.2f} {account['currency']})")
+        
+        try:
+            choice = input("\nUnesite redni broj računa: ").strip()
+            if not choice: continue
+            choice_id = int(choice)
+            
+            for account in bank_accounts:
+                if account['id'] == choice_id:
+                    return account
+            
+            print("Neispravan odabir. Račun s tim brojem ne postoji.")
+            press_enter()
+        except ValueError:
+            print("Neispravan unos. Molimo unesite broj.")
+            press_enter()
 #endregion
 #region Main Menu
 """Glavni meni aplikacije."""
@@ -243,15 +269,25 @@ def main_menu():
         if choice == '1':
             create_account()
         elif choice == '2':
-            show_account_details()
+            selected = select_account()
+            if selected:
+                show_account_details(selected)
         elif choice == '3':
-            show_transactions()
+            selected = select_account()
+            if selected:
+                show_transactions(selected)
         elif choice == '4':
-            deposit()
+            selected = select_account()
+            if selected:
+                deposit(selected)
         elif choice == '5':
-            withdraw()
+            selected = select_account()
+            if selected:
+                withdraw(selected)
         elif choice == '6':
-            show_owner_info()
+            selected = select_account()
+            if selected:
+                show_owner_info(selected)
         elif choice == '7':
             print("Izlaz iz aplikacije. Doviđenja!")
             sys.exit()
